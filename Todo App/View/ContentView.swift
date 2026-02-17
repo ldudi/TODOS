@@ -12,11 +12,13 @@ struct ContentView: View {
     // MARK: - PROPERTIES
     @Environment(\.managedObjectContext) private var managedObjectContext
 
-    @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \Item.timestamp, ascending: true)],
-        animation: .default)
-    private var items: FetchedResults<Item>
-
+//    @FetchRequest(
+//        sortDescriptors: [NSSortDescriptor(keyPath: \Item.timestamp, ascending: true)],
+//        animation: .default)
+    
+    @FetchRequest(entity: Todo.entity(), sortDescriptors: [NSSortDescriptor(keyPath: \Todo.name, ascending: true)])
+    
+    private var todos: FetchedResults<Todo>
     
     @State private var showingAddTodoView: Bool = false
     
@@ -24,21 +26,31 @@ struct ContentView: View {
     
     var body: some View {
         NavigationView {
-            List(0..<5) { item in
-                Text("Hello World!")
+            List {
+                ForEach(todos, id: \.self) { todo in
+                    HStack {
+                        Text(todo.name ?? "Unknown")
+                        Spacer()
+                        Text(todo.priority ?? "Unknown")
+                    }
+                }
+                .onDelete(perform: deleteItems)
             } //: LIST
             .navigationBarTitle("Todo", displayMode: .inline)
-            .navigationBarItems(trailing:
+            .navigationBarItems(
+                leading: EditButton(),
+                trailing:
                                     Button(action: {
                 self.showingAddTodoView.toggle()
             }) {
                 Image(systemName: "plus")
             } //: ADD BUTTON
-                .sheet(isPresented: $showingAddTodoView) {
-                    AddTodoView()
-                }
-            )
+                )
         } //: NAVIGATION
+        // Present the AddTodoView as a sheet from the NavigationView so it inherits the environment.
+        .sheet(isPresented: $showingAddTodoView) {
+            AddTodoView().environment(\.managedObjectContext, managedObjectContext)
+        }
     }
 
     private func addItem() {
@@ -59,8 +71,7 @@ struct ContentView: View {
 
     private func deleteItems(offsets: IndexSet) {
         withAnimation {
-            offsets.map { items[$0] }.forEach(managedObjectContext.delete)
-
+            offsets.map { todos[$0] }.forEach(managedObjectContext.delete)
             do {
                 try managedObjectContext.save()
             } catch {
