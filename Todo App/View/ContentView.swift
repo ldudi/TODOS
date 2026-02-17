@@ -26,26 +26,33 @@ struct ContentView: View {
     
     var body: some View {
         NavigationView {
-            List {
-                ForEach(todos, id: \.self) { todo in
-                    HStack {
-                        Text(todo.name ?? "Unknown")
-                        Spacer()
-                        Text(todo.priority ?? "Unknown")
+            ZStack {
+                List {
+                    ForEach(todos, id: \.self) { todo in
+                        HStack {
+                            Text(todo.name ?? "Unknown")
+                            Spacer()
+                            Text(todo.priority ?? "Unknown")
+                        }
                     }
-                }
-                .onDelete(perform: deleteItems)
-            } //: LIST
-            .navigationBarTitle("Todo", displayMode: .inline)
-            .navigationBarItems(
-                leading: EditButton(),
-                trailing:
-                                    Button(action: {
-                self.showingAddTodoView.toggle()
-            }) {
-                Image(systemName: "plus")
-            } //: ADD BUTTON
+                    .onDelete(perform: deleteItems)
+                } //: LIST
+                .navigationBarTitle("Todo", displayMode: .inline)
+                .navigationBarItems(
+                    leading: EditButton(),
+                    trailing:
+                        Button(action: {
+                            self.showingAddTodoView.toggle()
+                        }) {
+                            Image(systemName: "plus")
+                        } //: ADD BUTTON
                 )
+                
+                //  MARK: - NO TODO ITEMS
+                if todos.count == 0 {
+                    EmptyListView()
+                }
+            } //: ZSTACK
         } //: NAVIGATION
         // Present the AddTodoView as a sheet from the NavigationView so it inherits the environment.
         .sheet(isPresented: $showingAddTodoView) {
