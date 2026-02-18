@@ -21,6 +21,7 @@ struct ContentView: View {
     private var todos: FetchedResults<Todo>
     
     @State private var showingAddTodoView: Bool = false
+    @State private var animatingButton: Bool = false
     
     // MARK: - BODY
     
@@ -53,11 +54,46 @@ struct ContentView: View {
                     EmptyListView()
                 }
             } //: ZSTACK
+            .sheet(isPresented: $showingAddTodoView) {
+                AddTodoView().environment(\.managedObjectContext, managedObjectContext)
+            }
+            .overlay(
+                ZStack {
+                    
+                    Group {
+                        Circle()
+                            .fill(Color.blue)
+                            .opacity(self.animatingButton ? 0.2 : 0)
+                            .scaleEffect(self.animatingButton ? 1 : 0)
+                            .frame(width: 68, height: 68)
+                        
+                        Circle()
+                            .fill(Color.blue)
+                            .opacity(self.animatingButton ? 0.15 : 0)
+                            .scaleEffect(self.animatingButton ? 1 : 0)
+                            .frame(width: 88, height: 88)
+                    }
+                    .animation(.easeInOut(duration: 2).repeatForever(autoreverses: true), value: animatingButton)
+                    
+                    Button {
+                        self.showingAddTodoView.toggle()
+                    } label: {
+                        Image(systemName: "plus.circle.fill")
+                            .resizable()
+                            .scaledToFit()
+                            .background(Circle().fill(Color("ColorBase")))
+                            .frame(width: 48, height: 48, alignment: .center)
+                    }
+                    .onAppear() {
+                        self.animatingButton.toggle()
+                    }
+                } //: ZSTACK
+                .padding(.bottom, 15)
+                .padding(.top, 15)
+                , alignment: .bottomTrailing
+            )
         } //: NAVIGATION
         // Present the AddTodoView as a sheet from the NavigationView so it inherits the environment.
-        .sheet(isPresented: $showingAddTodoView) {
-            AddTodoView().environment(\.managedObjectContext, managedObjectContext)
-        }
     }
 
     private func addItem() {
@@ -103,3 +139,4 @@ private let itemFormatter: DateFormatter = {
 #Preview {
     ContentView().environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
 }
+
